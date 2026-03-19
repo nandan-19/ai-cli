@@ -11,5 +11,5 @@ tokio = { version = "1.50.0", features = ["rt-multi-thread", "macros", "process"
 dirs = "6.0.0"
 reqwest-eventsource = "0.6.0"
 futures = "0.3.32"
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream", "charset"] }
 sysinfo = "0.33"
