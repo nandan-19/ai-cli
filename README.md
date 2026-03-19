@@ -1,106 +1,159 @@
+<div align="center">
+
 # AI CLI Assistant
 
-A powerful, native command-line interface AI assistant powered by Groq and Llama 3 models. Designed for speed, utility, and seamless integration into your daily terminal workflow.
+[![Rust](https://img.shields.io/badge/rust-1.80%2B-blue.svg?style=flat-square)](https://www.rust-lang.org)
+[![Groq](https://img.shields.io/badge/Powered%20by-Groq-f55a3c.svg?style=flat-square)](https://groq.com)
+[![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
-The assistant is context-aware and agentic. It can naturally converse with you, retain history per terminal session, execute shell commands, read and write files, and explore your local directories to accomplish tasks autonomously.
+**A blazing fast, autonomous terminal companion powered by Groq.**
+
+</div>
+
+---
+
+## Table of Contents
+- [Features](#features)
+- [Installation](#installation)
+  - [Prerequisites](#prerequisites)
+  - [Build from Source](#build-from-source)
+- [Configuration](#configuration)
+- [Usage](#usage)
+  - [Direct Queries](#1-direct-queries)
+  - [Follow-up & Context](#2-follow-up--context--p----prev)
+  - [Native Command Recording](#3-native-command-recording-rec)
+  - [Session Management](#4-session-management)
+- [Security](#security)
+
+<br>
+
+The **AI CLI Assistant** integrates state-of-the-art LLMs directly into your terminal workflow. It operates not just as a chatbot, but as an **agent** capable of securely inspecting your environment, executing shell commands, and managing files to solve problems autonomously.
+
+<br>
 
 ## Features
 
-- **Blazing Fast**: Powered by Groq's high-speed inference engine.
-- **Agentic Tool Calling**: The AI can execute local commands, read files, list directories, and write code directly to your machine (with your explicit permission for destructive actions).
-- **Session Isolation**: Each terminal window or tab gets its own isolated conversation history.
-- **Command Recording**: Run a command through the AI to automatically capture its output or errors into the context window for troubleshooting.
-- **Quote-less Prompts**: No need to wrap your questions in quotes. Just type naturally.
+- **Blazing Fast Output**: Leveraging Groq's high-speed LPU infrastructure for instant token streaming.
+- **Agentic Tool Calling**: The AI natively integrates with your file system. It can seamlessly list directories, read/write files, and execute scripts to answer complex questions.
+- **Isolated Sessions**: Conversation context is strictly bound to the specific terminal window or tab you are using.
+- **Command Recording**: Automatically pipe the `stdout` and `stderr` of any terminal command directly into the AI's context window.
+- **Frictionless Prompting**: No more quoting your terminal inputs. Ask questions in plain English directly from your shell prompt.
 
-## Installation & Setup
+<br>
 
-### Requirements
+## Installation
 
-- [Rust & Cargo](https://rustup.rs/)
+### Prerequisites
+
+Ensure you have [Rust & Cargo](https://rustup.rs/) installed on your machine.
 
 ### Build from Source
 
-1. Clone the repository and navigate into the project directory:
-   ```bash
-   git clone <your-repo-url>
-   cd ai_cli
-   ```
+**1. Clone the repository**
+```bash
+git clone https://github.com/nandan-19/ai-cli.git
+cd ai_cli
+```
 
-2. Build the project using Cargo:
-   ```bash
-   cargo build --release
-   ```
+**2. Compile the binary**
+```bash
+cargo build --release
+```
 
-3. Make the executable globally available:
-   Move the compiled binary from `target/release/ai.exe` (Windows) or `target/release/ai` (Unix) to a directory in your system's `PATH`.
+**3. Move to your PATH**
 
-   For Windows (PowerShell):
-   ```powershell
-   Copy-Item -Path ".\target\release\ai.exe" -Destination "C:\tools\ai.exe" -Force
-   $env:Path += ";C:\tools"
-   ```
+Depending on your operating system, move the resulting executable to a directory available in your system's `PATH`.
 
-### Configuration
+**Windows (PowerShell):**
+```powershell
+New-Item -ItemType Directory -Force -Path "C:\tools"
+Copy-Item -Path ".\target\release\ai.exe" -Destination "C:\tools\ai.exe" -Force
+$env:Path += ";C:\tools"
+```
 
-Before using the CLI, you must configure it with your Groq API key.
+**macOS / Linux:**
 
-1. Set your Groq API key:
-   ```bash
-   ai set-key YOUR_GROQ_API_KEY
-   ```
+Move the executable to `/usr/local/bin` (requires root privileges):
+```bash
+sudo cp target/release/ai /usr/local/bin/ai
+```
 
-2. (Optional) Change the default model. The default is `llama-3.3-70b-versatile`.
-   ```bash
-   ai set-model llama-3.1-8b-instant
-   ```
+*Alternatively, for a local user installation without `sudo`, you can move it to `~/.local/bin` and ensure that directory is added to your `PATH` in your `~/.bashrc` or `~/.zshrc`:*
+```bash
+mkdir -p ~/.local/bin
+cp target/release/ai ~/.local/bin/ai
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+<br>
+
+## Configuration
+
+Before making your first query, you must authenticate the CLI using your Groq API key.
+
+**1. Set the API Key**
+```bash
+ai set-key YOUR_GROQ_API_KEY
+```
+
+**2. Configure the Model (Optional)**
+You can use any model supported by Groq. The CLI uses an optimized model by default, but you are free to configure it to your preference:
+```bash
+ai set-model YOUR_PREFERRED_MODEL_ID
+```
+*(e.g., `llama-3.3-70b-versatile`, `mixtral-8x7b-32768`, or `llama3-8b-8192`)*
+
+<br>
 
 ## Usage
 
-Interact with the assistant naturally directly from your prompt.
+Interact with the assistant naturally. Quotation marks are completely optional.
 
-### Basic Prompting
-Ask any question without quotes:
+### 1. Direct Queries
+Ask questions or request code generation.
 ```bash
-ai what is the best rust web framework?
+ai how do I parse JSON in Rust?
 ```
 
-### Contextual Prompting
-Use the `-p` or `--prev` flag to pass the recent session history as context to the AI. This is useful for follow-up questions or debugging previous command outputs.
+### 2. Follow-up & Context (`-p` / `--prev`)
+Pass your terminal's most recent conversation history back to the AI for highly contextual follow-ups.
 ```bash
-ai -p can you explain that in more detail?
+ai -p can you rewrite that using serde?
 ```
 
-### Command Recording
-Prefix shell commands with `ai rec` to execute them natively and automatically capture their stdout/stderr directly into the AI's context.
+### 3. Native Command Recording (`rec`)
+Use the `rec` subcommand to run any arbitrary terminal script. The AI will quietly execute it and cache the exit status, output, and errors directly into your session history.
+
 ```bash
 ai rec npm run dev
 ```
-If the command fails, you can immediately ask the AI to debug it:
+If the command crashes, simply ask the AI to debug it:
 ```bash
-ai -p why did that fail?
+ai -p why did the build fail?
 ```
 
-### Session Management
+### 4. Session Management
 
-The AI maintains isolated history files per terminal session.
+The AI isolates history per parent process. If you close your terminal, the session ends.
 
-- **View History**: See the context trace for your current terminal session.
-  ```bash
-  ai history
-  ```
+| Command | Description |
+|---|---|
+| `ai history` | Print the current terminal window's conversation history |
+| `ai clear` | Wipe the context for the current terminal window |
+| `ai clean-all` | Run a system-wide sweep to delete all orphaned background session files |
 
-- **Clear History**: Wipe the context for the current terminal session.
-  ```bash
-  ai clear
-  ```
+<br>
 
-- **Clean Orphaned Sessions**: Clear all background cache files globally across the system. (Useful if you have many closed terminals).
-  ```bash
-  ai clean-all
-  ```
+## Security
 
-## Security & Privacy 
+Granting an AI access to execute terminal commands requires strict security boundaries.
 
-The AI agent has the ability to write to files and execute shell commands. To maintain system security:
-- **Read-only tools** (listing directories, reading files) execute automatically if the AI requests them.
-- **Destructive tools** (writing files, executing shell commands) will always pause execution and prompt you for an explicit `[Y/n]` confirmation before proceeding.
+* **Read Operations** (like listing directories or reading file contents) are executed automatically if the AI requests them.
+* **Destructive Operations** (like writing/overwriting files or executing shell commands) will immediately halt the agent and prompt you with a `[Y/n]` verification before proceeding. 
+
+You remain in complete control of your host machine at all times.
+
+<div align="center">
+  <br>
+  <i>Built with Rust.</i>
+</div>
