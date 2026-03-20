@@ -63,7 +63,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                         let label = match role {
                             "user" => "You",
-                            "assistant" => " AI",
+                            "assistant" => "AI",
                             _ => role,
                         };
                         let color = if role == "user" { "\x1b[33m" } else { "\x1b[36m" };
@@ -237,7 +237,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    messages.push(json!({ "role": "user", "content": prompt }));
+    let user_msg = json!({ "role": "user", "content": prompt });
+    messages.push(user_msg.clone());
+    
+    // Always append the new user query to the running session
+    session.messages.push(user_msg);
+    save_session(&session);
+    
     println!("\n\x1b[36m[{}]\x1b[0m\n", config.model);
 
     // ── Agent Loop ───────────────────────────────────────────────────────────
@@ -363,10 +369,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         messages.push(assistant_msg.clone());
 
         // Also persist to current session history immediately, so we don't lose it if we loop or crash
-        if cli.prev_context || messages.len() == 3 {
-            session.messages.push(assistant_msg);
-            save_session(&session);
-        }
+        session.messages.push(assistant_msg.clone());
+        save_session(&session);
 
         if tool_calls.is_empty() {
             // Reached final conversational answer. Break out.
@@ -398,10 +402,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 messages.push(tool_msg.clone());
 
-                if cli.prev_context || messages.len() > 3 {
-                    session.messages.push(tool_msg);
-                    save_session(&session);
-                }
+                session.messages.push(tool_msg);
+                save_session(&session);
             }
 
             // Re-prompt the API with tools attached! Let's format nicely for UX:
@@ -411,7 +413,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    println!("\n");
+    println!();
 
     Ok(())
 }
