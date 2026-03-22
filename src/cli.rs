@@ -33,6 +33,8 @@ pub enum Commands {
     History,
     Clear,
 
+    #[command(name = "commit", about = "Analyze git diff and generate a commit message")]
+    Commit,
     #[command(name = "clean-all")]
     CleanAll,
 

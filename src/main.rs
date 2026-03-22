@@ -7,7 +7,7 @@ use clap::Parser;
 use futures::stream::StreamExt;
 use reqwest::Client;
 use reqwest_eventsource::{Event, EventSource};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::fs;
 use std::io::{self, Write};
@@ -18,7 +18,7 @@ use tokio::process::Command as TokioCommand;
 use cli::{Cli, Commands};
 use config::{load_config, save_config};
 use session::{clean_orphaned_sessions, load_session, save_session, session_path};
-use tools::{execute_tool, get_tools, ToolCallTracker};
+use tools::{ToolCallTracker, execute_tool, get_tools};
 
 const SYSTEM_PROMPT: &str = "\
 You are an expert CLI AI assistant. Provide clean, readable, terminal-friendly output. Keep answers concise.
@@ -43,6 +43,112 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ── Subcommands ─────────────────────────────────────────────────────────
     if let Some(cmd) = cli.command {
         match cmd {
+            Commands::Commit => {
+                let api_key = match &config.api_key {
+                    Some(k) => k.clone(),
+                    None => {
+                        println!("No API key set. Run:  ai set-key YOUR_KEY");
+                        return Ok(());
+                    }
+                };
+
+                println!("\x1b[2mAnalyzing git changes...\x1b[0m");
+
+                // 1. Get staged changes first
+                let output = std::process::Command::new("git")
+                    .args(["diff", "--staged"])
+                    .output()?;
+
+                let mut diff = String::from_utf8_lossy(&output.stdout).to_string();
+                let mut uses_all_flag = false;
+
+                // 2. If nothing is staged, grab unstaged changes
+                if diff.trim().is_empty() {
+                    let output_unstaged =
+                        std::process::Command::new("git").args(["diff"]).output()?;
+                    diff = String::from_utf8_lossy(&output_unstaged.stdout).to_string();
+
+                    if diff.trim().is_empty() {
+                        println!("No changes found in this repository.");
+                        return Ok(());
+                    }
+                    println!("\x1b[33mNote: Using unstaged changes.\x1b[0m");
+                    uses_all_flag = true; // We will use `git commit -a -m`
+                }
+
+                // Prevent blowing up the context window on massive refactors
+                if diff.len() > 15000 {
+                    diff.truncate(15000);
+                    diff.push_str("\n...[diff truncated]...");
+                }
+
+                // 3. One-shot strict prompt to Groq
+                let system_prompt = "You are an expert developer. Read the following git diff and write a concise, sensible commit message using the Conventional Commits format (e.g., feat:, fix:, refactor:, chore:). Do not include any other text, markdown blocks, quotes, or explanation. ONLY output the commit message itself.";
+
+                let messages = vec![
+                    json!({ "role": "system", "content": system_prompt }),
+                    json!({ "role": "user", "content": diff }),
+                ];
+
+                let payload = json!({
+                    "model": config.model,
+                    "messages": messages,
+                });
+
+                let client = Client::new();
+                let res = client
+                    .post("https://api.groq.com/openai/v1/chat/completions")
+                    .header("Authorization", format!("Bearer {}", api_key))
+                    .json(&payload)
+                    .send()
+                    .await?;
+
+                if !res.status().is_success() {
+                    eprintln!("API Error: {}", res.text().await?);
+                    return Ok(());
+                }
+
+                let data: Value = res.json().await?;
+                let suggested_message = data["choices"][0]["message"]["content"]
+                    .as_str()
+                    .unwrap_or("")
+                    .trim();
+
+                // 4. Present to user for execution
+                println!(
+                    "\n\x1b[36mSuggested Commit Message:\x1b[0m\n{}",
+                    suggested_message
+                );
+
+                print!("\nExecute this commit? [Y/n]: ");
+                io::stdout().flush().unwrap();
+                let mut input = String::new();
+                io::stdin().read_line(&mut input).unwrap();
+                let input = input.trim().to_lowercase();
+
+                if input == "y" || input == "yes" || input == "" {
+                    let mut args = vec!["commit"];
+                    if uses_all_flag {
+                        args.push("-a"); // Automatically stage modified files
+                    }
+                    args.push("-m");
+                    args.push(suggested_message);
+
+                    let commit_out = std::process::Command::new("git").args(&args).output()?;
+
+                    if commit_out.status.success() {
+                        println!("✓ Successfully committed!");
+                        println!("{}", String::from_utf8_lossy(&commit_out.stdout).trim());
+                    } else {
+                        eprintln!(
+                            "\x1b[31mFailed to commit:\x1b[0m\n{}",
+                            String::from_utf8_lossy(&commit_out.stderr)
+                        );
+                    }
+                } else {
+                    println!("Commit aborted.");
+                }
+            }
             Commands::SetKey { key } => {
                 config.api_key = Some(key);
                 save_config(&config);
@@ -70,7 +176,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             "assistant" => "AI",
                             _ => role,
                         };
-                        let color = if role == "user" { "\x1b[33m" } else { "\x1b[36m" };
+                        let color = if role == "user" {
+                            "\x1b[33m"
+                        } else {
+                            "\x1b[36m"
+                        };
 
                         let content = msg["content"].as_str().unwrap_or("");
                         if !content.is_empty() {
@@ -78,7 +188,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         }
                     }
                 }
-                println!("\x1b[2mSession file: {}\x1b[0m \n", session_path().display());
+                println!(
+                    "\x1b[2mSession file: {}\x1b[0m \n",
+                    session_path().display()
+                );
             }
             Commands::Clear => {
                 let p = session_path();
@@ -215,7 +328,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("  ai set-model MODEL_NAME");
         println!("  ai history");
         println!("  ai clear");
-        println!("  ai clean-all               clear all saved session histories across all terminals");
+        println!(
+            "  ai clean-all               clear all saved session histories across all terminals"
+        );
         return Ok(());
     }
 
@@ -243,11 +358,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let user_msg = json!({ "role": "user", "content": prompt });
     messages.push(user_msg.clone());
-    
+
     // Always append the new user query to the running session
     session.messages.push(user_msg);
     save_session(&session);
-    
+
     println!("\n\x1b[36m[{}]\x1b[0m\n", config.model);
 
     // ── Agent Loop ───────────────────────────────────────────────────────────
@@ -307,8 +422,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                             let idx = idx as usize;
                                             let tracker = tool_calls.entry(idx).or_default();
 
-                                            if let Some(id) =
-                                                tc.get("id").and_then(|i| i.as_str())
+                                            if let Some(id) = tc.get("id").and_then(|i| i.as_str())
                                             {
                                                 tracker.id = id.to_string();
                                             }
@@ -389,14 +503,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             for &idx in indices {
                 let tc = &tool_calls[&idx];
 
-                let result =
-                    if let Some(cached) = executed_results.get(&(&tc.name, &tc.arguments)) {
-                        cached.clone()
-                    } else {
-                        let r = execute_tool(&tc.name, &tc.arguments).await;
-                        executed_results.insert((&tc.name, &tc.arguments), r.clone());
-                        r
-                    };
+                let result = if let Some(cached) = executed_results.get(&(&tc.name, &tc.arguments))
+                {
+                    cached.clone()
+                } else {
+                    let r = execute_tool(&tc.name, &tc.arguments).await;
+                    executed_results.insert((&tc.name, &tc.arguments), r.clone());
+                    r
+                };
 
                 let tool_msg = json!({
                     "role": "tool",
@@ -418,6 +532,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("\n");
-    
+
     Ok(())
 }
