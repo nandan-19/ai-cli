@@ -101,7 +101,7 @@ You can use any model supported by Groq. The CLI uses an optimized model by defa
 ```bash
 ai set-model YOUR_PREFERRED_MODEL_ID
 ```
-*(e.g., `llama-3.3-70b-versatile`, `mixtral-8x7b-32768`, or `llama3-8b-8192`)*
+*(e.g.,`openai/gpt-oss-20b`, `llama-3.3-70b-versatile`) 
 
 <br>
 

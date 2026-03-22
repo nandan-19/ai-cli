@@ -12,7 +12,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             api_key: None,
-            model: "llama-3.3-70b-versatile".to_string(),
+            model: "openai/gpt-oss-20b".to_string(),
         }
     }
 }
