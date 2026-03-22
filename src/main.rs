@@ -460,7 +460,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Build the assistant message to append to history
         let mut assistant_msg = json!({ "role": "assistant" });
-        if !full_response.is_empty() {
+                if !full_response.is_empty() {
             assistant_msg["content"] = json!(full_response);
         }
 
@@ -470,7 +470,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             indices.sort(); // maintain execution order
 
             for &idx in &indices {
-                let tc = &tool_calls[&idx];
+    let tc = &tool_calls[&idx];
                 tc_arr.push(json!({
                     "id": tc.id,
                     "type": "function",
