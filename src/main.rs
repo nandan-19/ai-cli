@@ -20,12 +20,16 @@ use config::{load_config, save_config};
 use session::{clean_orphaned_sessions, load_session, save_session, session_path};
 use tools::{execute_tool, get_tools, ToolCallTracker};
 
-const SYSTEM_PROMPT: &str = "You are a helpful CLI AI assistant. Provide clean, \
-    readable, terminal-friendly output. Keep answers concise by default, but \
-    provide detailed explanations if the user explicitly asks. Avoid overly \
-    complex markdown tables. You have access to tools that let you act as an agent \
-    on the user's local machine. Use these tools when requested or when they help \
-    you fulfill the objective.";
+const SYSTEM_PROMPT: &str = "\
+You are an expert CLI AI assistant. Provide clean, readable, terminal-friendly output. Keep answers concise.
+You have access to tools to act as an agent on the local machine.
+
+CRITICAL RULES FOR TOOL USAGE:
+1. DO NOT guess or make unnecessary tool calls. Only use them when explicitly needed to fulfill the request.
+2. If a command fails, analyze the error. DO NOT blindly repeat the exact same command.
+3. If you fail to accomplish a task after 2 attempts, STOP and ask the user for clarification.
+4. DO NOT run interactive commands (e.g., vim, nano, less) or long-running background servers (e.g., npm start, cargo run). Commands must terminate on their own.
+5. If a command succeeds but returns no output, assume it worked perfectly. Do not run it again to check.";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -42,17 +46,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Commands::SetKey { key } => {
                 config.api_key = Some(key);
                 save_config(&config);
-                println!("✓ API key saved.");
+                println!("✓ API key saved.\n");
             }
             Commands::SetModel { model } => {
                 config.model = model.clone();
                 save_config(&config);
-                println!("✓ Model switched to {}.", model);
+                println!("✓ Model switched to {}.\n", model);
             }
             Commands::History => {
                 let session = load_session();
                 if session.messages.is_empty() {
-                    println!("No history for this session.");
+                    println!("No history for this session.\n");
                 } else {
                     println!();
                     for msg in &session.messages {
@@ -74,7 +78,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         }
                     }
                 }
-                println!("\x1b[2mSession file: {}\x1b[0m", session_path().display());
+                println!("\x1b[2mSession file: {}\x1b[0m \n", session_path().display());
             }
             Commands::Clear => {
                 let p = session_path();
@@ -82,7 +86,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     fs::remove_file(&p).ok();
                     println!("✓ Session history cleared.");
                 } else {
-                    println!("No history to clear.");
+                    println!("No history to clear.\n");
                 }
             }
             Commands::CleanAll => {
@@ -100,7 +104,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         }
                     }
                 }
-                println!("✓ Cleared {} session(s) across all terminals.", count);
+                println!("✓ Cleared {} session(s) across all terminals.\n", count);
             }
             Commands::Rec { cmd_args } => {
                 if cmd_args.is_empty() {
@@ -413,7 +417,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    println!();
-
+    println!("\n");
+    
     Ok(())
 }

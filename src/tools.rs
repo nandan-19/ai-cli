@@ -1,6 +1,8 @@
 use serde_json::{json, Value};
 use std::fs;
 use std::io::{self, Write};
+use tokio::time::{timeout, Duration};
+use tokio::process::Command as TokioCommand;
 
 #[derive(Debug, Default)]
 pub struct ToolCallTracker {
@@ -15,7 +17,7 @@ pub fn get_tools() -> Value {
             "type": "function",
             "function": {
                 "name": "execute_cmd",
-                "description": "Execute a terminal command. Use this to run scripts, tests, or system commands.",
+                "description": "Execute a terminal command. DO NOT run interactive apps, editors, or background servers. Only run commands that execute and terminate automatically.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -93,20 +95,20 @@ pub async fn execute_tool(name: &str, args: &str) -> String {
                 return "User denied permission to run the command.".into();
             }
 
-            println!("\x1b[2mRunning command...\x1b[0m");
+            println!("\x1b[2mRunning command (max 60s timeout)...\x1b[0m");
             let is_windows = cfg!(target_os = "windows");
             let (exec_cmd, exec_args) = if is_windows {
-                ("cmd".to_string(), vec!["/C".to_string(), cmd.to_string()])
+                ("cmd", vec!["/C", cmd])
             } else {
-                ("sh".to_string(), vec!["-c".to_string(), cmd.to_string()])
+                ("sh", vec!["-c", cmd])
             };
 
-            let output = std::process::Command::new(exec_cmd)
-                .args(exec_args)
+            let output_future = TokioCommand::new(exec_cmd)
+                .args(&exec_args)
                 .output();
 
-            match output {
-                Ok(o) => {
+            match timeout(Duration::from_secs(60), output_future).await {
+                Ok(Ok(o)) => {
                     let mut res = format!("Exit status: {}\n", o.status);
                     if !o.stdout.is_empty() {
                         res.push_str(&format!("Stdout:\n{}\n", String::from_utf8_lossy(&o.stdout)));
@@ -114,13 +116,20 @@ pub async fn execute_tool(name: &str, args: &str) -> String {
                     if !o.stderr.is_empty() {
                         res.push_str(&format!("Stderr:\n{}\n", String::from_utf8_lossy(&o.stderr)));
                     }
+                    
+                    // Handle silent successes so the agent doesn't think it failed
+                    if res.trim() == format!("Exit status: {}", o.status).trim() && o.status.success() {
+                        res.push_str("(Command executed successfully with no output)");
+                    }
+
                     if res.len() > 10000 {
                         res.truncate(10000);
                         res.push_str("\n...[output truncated]...");
                     }
                     res
                 }
-                Err(e) => format!("Failed to spawn command: {}", e),
+                Ok(Err(e)) => format!("Failed to spawn command: {}", e),
+                Err(_) => "Error: Command timed out after 60 seconds. Do not run background servers or interactive commands.".into(),
             }
         }
         "read_file" => {
