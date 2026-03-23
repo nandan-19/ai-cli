@@ -62,15 +62,26 @@ jobs:
 
       - name: Stage binaries for release
         run: |
-          cp artifacts/ai-linux-x86_64/ai       ai
-          cp artifacts/ai-windows-x86_64.exe/ai.exe ai.exe
+          cp artifacts/ai-linux-x86_64/ai        ai-linux-x86_64
+          cp artifacts/ai-windows-x86_64.exe/ai.exe ai-windows-x86_64.exe
 
       - name: Create Release and upload assets
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          body: |
+            ## Downloads
+
+            | Platform | Binary |
+            |----------|--------|
+            | Linux (x86_64) | `ai-linux-x86_64` |
+            | Windows (x86_64) | `ai-windows-x86_64.exe` |
+
+            ### Usage
+            Download the binary for your platform.
+            - **Linux:** `chmod +x ai-linux-x86_64`, then run `./ai-linux-x86_64` or rename it to `ai` and add it to your `PATH`.
+            - **Windows:** run `ai-windows-x86_64.exe` directly, or rename it to `ai.exe` and add it to your `PATH`.
           files: |
-            ai
-            ai.exe
+            ai-linux-x86_64
+            ai-windows-x86_64.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
