@@ -15,6 +15,7 @@
 ## Table of Contents
 - [Features](#features)
 - [Installation](#installation)
+  - [Pre-built Binaries](#pre-built-binaries)
   - [Prerequisites](#prerequisites)
   - [Build from Source](#build-from-source)
 - [Configuration](#configuration)
@@ -42,6 +43,35 @@ The **AI CLI Assistant** integrates state-of-the-art LLMs directly into your ter
 <br>
 
 ## Installation
+
+### Pre-built Binaries
+
+The easiest way to install is to download a pre-compiled binary directly from the [**Releases**](https://github.com/nandan-19/ai-cli/releases/latest) page.
+
+| Platform | Download |
+|---|---|
+| **Linux** (x86-64) | `ai-linux-x86_64` |
+| **Windows** (x86-64) | `ai-windows-x86_64.exe` |
+
+**Linux:**
+```bash
+# Download the latest release
+curl -Lo ai https://github.com/nandan-19/ai-cli/releases/latest/download/ai-linux-x86_64
+chmod +x ai
+sudo mv ai /usr/local/bin/ai
+```
+
+**Windows (PowerShell):**
+```powershell
+# Download the latest release
+Invoke-WebRequest -Uri "https://github.com/nandan-19/ai-cli/releases/latest/download/ai-windows-x86_64.exe" -OutFile "ai.exe"
+New-Item -ItemType Directory -Force -Path "C:\tools"
+Move-Item -Path ".\ai.exe" -Destination "C:\tools\ai.exe" -Force
+# Add to PATH permanently for the current user
+[Environment]::SetEnvironmentVariable('Path', $env:Path + ';C:\tools', 'User')
+```
+
+<br>
 
 ### Prerequisites
 
