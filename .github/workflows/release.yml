@@ -60,17 +60,17 @@ jobs:
         with:
           path: artifacts
 
-      - name: Rename binaries to platform-specific names
+      - name: Stage binaries for release
         run: |
-          cp artifacts/ai-linux-x86_64/ai       ai-linux-x86_64
-          cp artifacts/ai-windows-x86_64.exe/ai.exe ai-windows-x86_64.exe
+          cp artifacts/ai-linux-x86_64/ai       ai
+          cp artifacts/ai-windows-x86_64.exe/ai.exe ai.exe
 
       - name: Create Release and upload assets
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           files: |
-            ai-linux-x86_64
-            ai-windows-x86_64.exe
+            ai
+            ai.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
