@@ -6,7 +6,7 @@ use sysinfo::{Pid, ProcessesToUpdate, System};
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct Session {
-    pub messages: Vec<Value>, 
+    pub messages: Vec<Value>,
 }
 
 pub fn parent_pid() -> u32 {
@@ -43,7 +43,7 @@ pub fn save_session(session: &Session) {
 pub fn clean_orphaned_sessions() {
     let mut sys = System::new();
     sys.refresh_processes(ProcessesToUpdate::All, false);
-    
+
     let temp_dir = std::env::temp_dir();
     if let Ok(entries) = fs::read_dir(temp_dir) {
         for entry in entries.flatten() {
