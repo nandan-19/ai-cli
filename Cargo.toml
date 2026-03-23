@@ -7,9 +7,20 @@ edition = "2024"
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
-tokio = { version = "1.50.0", features = ["rt-multi-thread", "macros", "process", "io-util", "io-std"] }
+tokio = { version = "1.50.0", features = [
+   "rt-multi-thread",
+   "macros",
+   "process",
+   "io-util",
+   "io-std",
+] }
 dirs = "6.0.0"
 reqwest-eventsource = "0.6.0"
 futures = "0.3.32"
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream", "charset"] }
+reqwest = { version = "0.12", default-features = false, features = [
+   "json",
+   "rustls-tls",
+   "stream",
+   "charset",
+] }
 sysinfo = "0.33"
