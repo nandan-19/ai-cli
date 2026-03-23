@@ -73,8 +73,8 @@ jobs:
 
             | Platform | File to download |
             |----------|-----------------|
-            | 🐧 Linux (x86_64) | `ai` |
-            | 🪟 Windows (x86_64) | `ai.exe` |
+            | Linux (x86_64) | `ai` |
+            | Windows (x86_64) | `ai.exe` |
 
             ### Setup
             - **Linux:** download `ai`, run `chmod +x ai`, then `./ai` — or move it to somewhere in your `PATH` (e.g. `/usr/local/bin/ai`).
