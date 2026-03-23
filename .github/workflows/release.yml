@@ -17,10 +17,10 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact_name: ai
-            asset_name: ai-linux-x86_64
+            asset_name: ai
           - os: windows-latest
             artifact_name: ai.exe
-            asset_name: ai-windows-x86_64.exe
+            asset_name: ai.exe
 
     steps:
       - name: Checkout repository
@@ -62,13 +62,23 @@ jobs:
 
       - name: Stage binaries for release
         run: |
-          cp artifacts/ai-linux-x86_64/ai       ai
-          cp artifacts/ai-windows-x86_64.exe/ai.exe ai.exe
+          cp artifacts/ai/ai         ai
+          cp artifacts/ai.exe/ai.exe ai.exe
 
       - name: Create Release and upload assets
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          body: |
+            ## Downloads
+
+            | Platform | File to download |
+            |----------|-----------------|
+            | Linux (x86_64) | `ai` |
+            | Windows (x86_64) | `ai.exe` |
+
+            ### Setup
+            - **Linux:** download `ai`, run `chmod +x ai`, then `./ai` — or move it to somewhere in your `PATH` (e.g. `/usr/local/bin/ai`).
+            - **Windows:** download `ai.exe` and run it directly, or add its folder to your `PATH`.
           files: |
             ai
             ai.exe
