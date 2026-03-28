@@ -55,7 +55,8 @@ fn render_inline(text: &str) -> String {
                 let alt_end = i + 2 + bracket_end;
                 if alt_end + 1 < len && chars[alt_end + 1] == '(' {
                     if let Some(paren_end) = chars[alt_end + 2..].iter().position(|&c| c == ')') {
-                        let url: String = chars[alt_end + 2..alt_end + 2 + paren_end].iter().collect();
+                        let url: String =
+                            chars[alt_end + 2..alt_end + 2 + paren_end].iter().collect();
                         let alt: String = chars[i + 2..alt_end].iter().collect();
                         out.push_str(&format!("\x1b[35m🖼 {}\x1b[0m \x1b[2m({})\x1b[0m", alt, url));
                         i = alt_end + 2 + paren_end + 1;
@@ -71,10 +72,15 @@ fn render_inline(text: &str) -> String {
                 let text_end = i + 1 + bracket_end;
                 if text_end + 1 < len && chars[text_end + 1] == '(' {
                     if let Some(paren_end) = chars[text_end + 2..].iter().position(|&c| c == ')') {
-                        let url: String = chars[text_end + 2..text_end + 2 + paren_end].iter().collect();
+                        let url: String = chars[text_end + 2..text_end + 2 + paren_end]
+                            .iter()
+                            .collect();
                         let link_text: String = chars[i + 1..text_end].iter().collect();
                         let rendered_text = render_inline(&link_text);
-                        out.push_str(&format!("\x1b[4;34m{}\x1b[0m \x1b[2m({})\x1b[0m", rendered_text, url));
+                        out.push_str(&format!(
+                            "\x1b[4;34m{}\x1b[0m \x1b[2m({})\x1b[0m",
+                            rendered_text, url
+                        ));
                         i = text_end + 2 + paren_end + 1;
                         continue;
                     }
@@ -85,7 +91,9 @@ fn render_inline(text: &str) -> String {
         // Code span  `code`  (may use multiple backticks)
         if chars[i] == '`' {
             let tick_start = i;
-            while i < len && chars[i] == '`' { i += 1; }
+            while i < len && chars[i] == '`' {
+                i += 1;
+            }
             let tick_count = i - tick_start;
             let closing: String = std::iter::repeat('`').take(tick_count).collect();
             let rest: String = chars[i..].iter().collect();
@@ -96,7 +104,9 @@ fn render_inline(text: &str) -> String {
                 continue;
             } else {
                 // No closing — treat as literal
-                for _ in 0..tick_count { out.push('`'); }
+                for _ in 0..tick_count {
+                    out.push('`');
+                }
                 continue;
             }
         }
@@ -209,9 +219,13 @@ fn render_markdown(text: &str) {
 
         // ── Fenced code block ─────────────────────────────────────────────
         // Supports both ``` and ~~~
-        let fence_char = if trimmed.starts_with("```") { Some('`') }
-                         else if trimmed.starts_with("~~~") { Some('~') }
-                         else { None };
+        let fence_char = if trimmed.starts_with("```") {
+            Some('`')
+        } else if trimmed.starts_with("~~~") {
+            Some('~')
+        } else {
+            None
+        };
 
         if let Some(fc) = fence_char {
             let fence_prefix: String = std::iter::repeat(fc).take(3).collect();
@@ -226,8 +240,11 @@ fn render_markdown(text: &str) {
                     i += 1;
                     break;
                 }
-                println!("\x1b[48;5;235m\x1b[93m {:<width$}\x1b[0m",
-                    code_line, width = term_width.saturating_sub(1));
+                println!(
+                    "\x1b[48;5;235m\x1b[93m {:<width$}\x1b[0m",
+                    code_line,
+                    width = term_width.saturating_sub(1)
+                );
                 i += 1;
             }
             println!();
@@ -236,17 +253,28 @@ fn render_markdown(text: &str) {
 
         // ── Indented code block (4+ spaces or 1 tab) ────────────────────
         if line.starts_with("    ") || line.starts_with('\t') {
-            let code = if line.starts_with('\t') { &line[1..] } else { &line[4..] };
-            println!("\x1b[48;5;235m\x1b[93m {:<width$}\x1b[0m",
-                code, width = term_width.saturating_sub(1));
+            let code = if line.starts_with('\t') {
+                &line[1..]
+            } else {
+                &line[4..]
+            };
+            println!(
+                "\x1b[48;5;235m\x1b[93m {:<width$}\x1b[0m",
+                code,
+                width = term_width.saturating_sub(1)
+            );
             i += 1;
             continue;
         }
 
         // ── Thematic break  --- / *** / ___ ─────────────────────────────
         let compact = trimmed.replace(' ', "");
-        if compact == "---" || compact == "***" || compact == "___"
-            || compact == "----" || compact == "=====" {
+        if compact == "---"
+            || compact == "***"
+            || compact == "___"
+            || compact == "----"
+            || compact == "====="
+        {
             println!("\x1b[2m{}\x1b[0m", "─".repeat(term_width));
             i += 1;
             continue;
@@ -254,7 +282,8 @@ fn render_markdown(text: &str) {
 
         // ── ATX Headings  # through ###### ──────────────────────────────
         let heading_level = trimmed.chars().take_while(|&c| c == '#').count();
-        if heading_level > 0 && heading_level <= 6
+        if heading_level > 0
+            && heading_level <= 6
             && trimmed.len() > heading_level
             && trimmed.as_bytes().get(heading_level) == Some(&b' ')
         {
@@ -317,7 +346,8 @@ fn render_markdown(text: &str) {
             // Peek ahead to see if next line is a separator (---|--- pattern)
             let is_table_header = i + 1 < total && {
                 let sep = lines[i + 1].trim();
-                sep.starts_with('|') && sep.contains('-')
+                sep.starts_with('|')
+                    && sep.contains('-')
                     && sep.chars().all(|c| matches!(c, '|' | '-' | ':' | ' '))
             };
 
@@ -328,7 +358,9 @@ fn render_markdown(text: &str) {
                 let mut j = i;
                 while j < total {
                     let row = lines[j].trim();
-                    if row.is_empty() { break; }
+                    if row.is_empty() {
+                        break;
+                    }
                     if row.starts_with('|') || row.contains('|') {
                         let is_sep = row.chars().all(|c| matches!(c, '|' | '-' | ':' | ' '));
                         if is_sep {
@@ -349,7 +381,12 @@ fn render_markdown(text: &str) {
                 }
 
                 // Compute column widths
-                let col_count = rows.iter().filter(|r| !r.is_empty()).map(|r| r.len()).max().unwrap_or(0);
+                let col_count = rows
+                    .iter()
+                    .filter(|r| !r.is_empty())
+                    .map(|r| r.len())
+                    .max()
+                    .unwrap_or(0);
                 let mut col_widths = vec![3usize; col_count];
                 for row in &rows {
                     for (ci, cell) in row.iter().enumerate() {
@@ -360,7 +397,8 @@ fn render_markdown(text: &str) {
                 }
 
                 // Draw top border
-                let top: String = col_widths.iter()
+                let top: String = col_widths
+                    .iter()
                     .map(|&w| "─".repeat(w + 2))
                     .collect::<Vec<_>>()
                     .join("┬");
@@ -370,30 +408,39 @@ fn render_markdown(text: &str) {
                 for (ri, row) in rows.iter().enumerate() {
                     if ri == sep_idx {
                         // separator row → draw mid-border
-                        let mid: String = col_widths.iter()
+                        let mid: String = col_widths
+                            .iter()
                             .map(|&w| "─".repeat(w + 2))
                             .collect::<Vec<_>>()
                             .join("┼");
                         println!("\x1b[38;5;244m├{}┤\x1b[0m", mid);
                         continue;
                     }
-                    if row.is_empty() { continue; }
+                    if row.is_empty() {
+                        continue;
+                    }
 
-                    let row_str: String = row.iter().enumerate().map(|(ci, cell)| {
-                        let w = *col_widths.get(ci).unwrap_or(&3);
-                        let rendered = render_inline(cell);
-                        if is_first {
-                            format!(" \x1b[1;36m{:<width$}\x1b[0m ", rendered, width = w)
-                        } else {
-                            format!(" {:<width$} ", rendered, width = w)
-                        }
-                    }).collect::<Vec<_>>().join("\x1b[38;5;244m│\x1b[0m");
+                    let row_str: String = row
+                        .iter()
+                        .enumerate()
+                        .map(|(ci, cell)| {
+                            let w = *col_widths.get(ci).unwrap_or(&3);
+                            let rendered = render_inline(cell);
+                            if is_first {
+                                format!(" \x1b[1;36m{:<width$}\x1b[0m ", rendered, width = w)
+                            } else {
+                                format!(" {:<width$} ", rendered, width = w)
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                        .join("\x1b[38;5;244m│\x1b[0m");
                     println!("\x1b[38;5;244m│\x1b[0m{}\x1b[38;5;244m│\x1b[0m", row_str);
                     is_first = false;
                 }
 
                 // Draw bottom border
-                let bot: String = col_widths.iter()
+                let bot: String = col_widths
+                    .iter()
                     .map(|&w| "─".repeat(w + 2))
                     .collect::<Vec<_>>()
                     .join("┴");
@@ -411,8 +458,10 @@ fn render_markdown(text: &str) {
             i += 1;
             continue;
         }
-        if trimmed.starts_with("- [x] ") || trimmed.starts_with("* [x] ")
-            || trimmed.starts_with("- [X] ") || trimmed.starts_with("* [X] ")
+        if trimmed.starts_with("- [x] ")
+            || trimmed.starts_with("* [x] ")
+            || trimmed.starts_with("- [X] ")
+            || trimmed.starts_with("* [X] ")
         {
             let content = render_inline(&trimmed[6..]);
             println!("  \x1b[32m☑\x1b[0m \x1b[2m{}\x1b[0m", content);
@@ -422,7 +471,8 @@ fn render_markdown(text: &str) {
 
         // ── Unordered list  - / * / + ────────────────────────────────────
         let indent_spaces = line.len() - line.trim_start().len();
-        let is_unordered = trimmed.starts_with("- ") || trimmed.starts_with("* ") || trimmed.starts_with("+ ");
+        let is_unordered =
+            trimmed.starts_with("- ") || trimmed.starts_with("* ") || trimmed.starts_with("+ ");
         if is_unordered {
             let content = render_inline(&trimmed[2..]);
             let indent = "  ".repeat(indent_spaces / 2);
@@ -444,9 +494,12 @@ fn render_markdown(text: &str) {
                     dot_pos = Some(ci);
                     break;
                 }
-                if !ch.is_ascii_digit() { break; }
+                if !ch.is_ascii_digit() {
+                    break;
+                }
             }
-            dot_pos.map(|dp| trimmed[..dp].parse::<u32>().is_ok() && trimmed.len() > dp + 1)
+            dot_pos
+                .map(|dp| trimmed[..dp].parse::<u32>().is_ok() && trimmed.len() > dp + 1)
                 .unwrap_or(false)
         };
         if is_ordered {
@@ -473,17 +526,77 @@ fn render_markdown(text: &str) {
     println!();
 }
 
+const SYSTEM_PROMPT: &str =
+    "You are a deterministic CLI AI agent operating inside a terminal environment.
 
-const SYSTEM_PROMPT: &str = "\
-You are an expert CLI AI assistant. Provide clean, readable, terminal-friendly output. Keep answers concise.
-You have access to tools to act as an agent on the local machine.
+PRIMARY OBJECTIVE:
+Execute user intent with maximum correctness, minimal assumptions, and zero unnecessary actions.
 
-CRITICAL RULES FOR TOOL USAGE:
-1. DO NOT guess or make unnecessary tool calls. Only use them when explicitly needed to fulfill the request.
-2. If a command fails, analyze the error. DO NOT blindly repeat the exact same command.
-3. If you fail to accomplish a task after 2 attempts, STOP and ask the user for clarification.
-4. DO NOT run interactive commands (e.g., vim, nano, less) or long-running background servers (e.g., npm start, cargo run). Commands must terminate on their own.
-5. If a command succeeds but returns no output, assume it worked perfectly. Do not run it again to check.";
+OPERATING PRINCIPLES:
+
+1. DETERMINISM
+- Do not guess. Do not hallucinate.
+- If information is missing, explicitly ask for it.
+- Every action must be justified by the user request or observed system state.
+
+2. TOOL USAGE POLICY
+- Tools represent real system actions (shell commands, file ops).
+- Only call a tool if:
+  a) It is REQUIRED to progress the task
+  b) The expected outcome is known and useful
+- Never call tools speculatively.
+- Never repeat a tool call with identical arguments after failure.
+
+3. EXECUTION MODEL
+- Think step-by-step before acting:
+  a) Understand intent
+  b) Validate constraints (OS, files, permissions, dependencies)
+  c) Decide minimal action
+- Prefer the smallest valid command over complex pipelines.
+
+4. ERROR HANDLING
+- On failure:
+  a) Parse the error message
+  b) Identify root cause (missing file, permission, syntax, dependency)
+  c) Modify strategy
+- If 2 attempts fail → STOP and ask user for clarification.
+
+5. COMMAND SAFETY
+- NEVER run:
+  - Interactive commands (vim, nano, less, top)
+  - Long-running processes (servers, watchers)
+- All commands must terminate quickly.
+
+6. STATE AWARENESS
+- Track:
+  - What has been executed
+  - What succeeded
+  - What failed
+- Do not redo successful steps.
+
+7. OUTPUT CONTRACT
+- Be concise and terminal-friendly.
+- No markdown explanations unless necessary.
+- No verbosity, no storytelling.
+- If using tools → prioritize execution over explanation.
+
+8. EDGE CASE HANDLING
+- If multiple valid approaches exist:
+  - Choose the simplest
+  - Mention alternatives only if relevant
+- If environment is ambiguous → ask before acting.
+
+9. USER OVERRIDE
+- If user explicitly requests something unsafe or inefficient:
+  - Warn briefly
+  - Still comply unless destructive
+
+FAILURE CONDITIONS (STOP IMMEDIATELY):
+- Missing critical information
+- Repeated command failure
+- Ambiguous user intent
+
+Your behavior must resemble a careful systems engineer, not a conversational assistant.";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -784,25 +897,45 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     if cli.prompt.is_empty() {
-        println!("\n\x1b[1;36mai\x1b[0m  \x1b[2mv{}\x1b[0m — terminal AI assistant powered by Groq\n", env!("CARGO_PKG_VERSION"));
+        println!(
+            "\n\x1b[1;36mai\x1b[0m  \x1b[2mv{}\x1b[0m — terminal AI assistant powered by Groq\n",
+            env!("CARGO_PKG_VERSION")
+        );
         println!("\x1b[1mUsage\x1b[0m");
         println!("  ai \x1b[36m<question>\x1b[0m              ask anything, no quotes needed");
-        println!("  ai \x1b[36m-p <question>\x1b[0m           follow-up using session history as context");
+        println!(
+            "  ai \x1b[36m-p <question>\x1b[0m           follow-up using session history as context"
+        );
         println!();
         println!("\x1b[1mSubcommands\x1b[0m");
-        println!("  ai \x1b[36mrec\x1b[0m \x1b[2m<cmd>\x1b[0m               run a command and capture output into history");
-        println!("  ai \x1b[36mcommit\x1b[0m                  analyze git diff and auto-generate a commit");
-        println!("  ai \x1b[36mstream-toggle\x1b[0m           switch between live streaming and markdown mode");
-        println!("  ai \x1b[36mhistory\x1b[0m                 print this session's conversation history");
-        println!("  ai \x1b[36mclear\x1b[0m                   wipe this session's conversation history");
-        println!("  ai \x1b[36mclean-all\x1b[0m               remove orphaned session files from closed terminals");
-        println!("  ai \x1b[36mset-key\x1b[0m \x1b[2m<key>\x1b[0m            save your Groq API key");
-        println!("  ai \x1b[36mset-model\x1b[0m \x1b[2m<model>\x1b[0m         set the model for all queries");
+        println!(
+            "  ai \x1b[36mrec\x1b[0m \x1b[2m<cmd>\x1b[0m               run a command and capture output into history"
+        );
+        println!(
+            "  ai \x1b[36mcommit\x1b[0m                  analyze git diff and auto-generate a commit"
+        );
+        println!(
+            "  ai \x1b[36mstream-toggle\x1b[0m           switch between live streaming and markdown mode"
+        );
+        println!(
+            "  ai \x1b[36mhistory\x1b[0m                 print this session's conversation history"
+        );
+        println!(
+            "  ai \x1b[36mclear\x1b[0m                   wipe this session's conversation history"
+        );
+        println!(
+            "  ai \x1b[36mclean-all\x1b[0m               remove orphaned session files from closed terminals"
+        );
+        println!(
+            "  ai \x1b[36mset-key\x1b[0m \x1b[2m<key>\x1b[0m            save your Groq API key"
+        );
+        println!(
+            "  ai \x1b[36mset-model\x1b[0m \x1b[2m<model>\x1b[0m         set the model for all queries"
+        );
         println!();
         println!("\x1b[2mRun `ai <subcommand> --help` for details on any command.\x1b[0m\n");
         return Ok(());
     }
-
 
     let api_key = match &config.api_key {
         Some(k) => k.clone(),
