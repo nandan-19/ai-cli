@@ -3,42 +3,51 @@
 # AI CLI Assistant
 
 [![Rust](https://img.shields.io/badge/rust-1.80%2B-blue.svg?style=flat-square)](https://www.rust-lang.org)
+[![Version](https://img.shields.io/badge/version-0.1.2-orange.svg?style=flat-square)](https://github.com/nandan-19/ai-cli/releases)
 [![Groq](https://img.shields.io/badge/Powered%20by-Groq-f55a3c.svg?style=flat-square)](https://groq.com)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
-**A blazing fast, autonomous terminal companion powered by Groq.**
+**A blazing fast, autonomous terminal companion powered by Groq.**  
+Ask questions, run commands, generate commits, and render rich Markdown — all from your shell.
 
 </div>
 
 ---
 
 ## Table of Contents
+
 - [Features](#features)
 - [Installation](#installation)
   - [Pre-built Binaries](#pre-built-binaries)
-  - [Prerequisites](#prerequisites)
   - [Build from Source](#build-from-source)
 - [Configuration](#configuration)
-- [Usage](#usage)
+- [Command Reference](#command-reference)
   - [Direct Queries](#1-direct-queries)
-  - [Follow-up & Context](#2-follow-up--context--p----prev)
-  - [Native Command Recording](#3-native-command-recording-rec)
-  - [Session Management](#4-session-management)
+  - [Follow-up with Context](#2-follow-up-with-context--p----prev)
+  - [Command Recording](#3-command-recording-rec)
+  - [Auto Commit](#4-auto-commit-commit)
+  - [Streaming Toggle](#5-streaming--markdown-mode-stream-toggle)
+  - [Session Management](#6-session-management)
+  - [Configuration Commands](#7-configuration-commands)
+- [Output Modes](#output-modes)
+- [Markdown Rendering](#markdown-rendering)
 - [Security](#security)
 
 <br>
 
-The **AI CLI Assistant** integrates state-of-the-art LLMs directly into your terminal workflow. It operates not just as a chatbot, but as an **agent** capable of securely inspecting your environment, executing shell commands, and managing files to solve problems autonomously.
+The **AI CLI Assistant** integrates state-of-the-art LLMs directly into your terminal workflow. It operates not just as a chatbot, but as an **autonomous agent** capable of inspecting your environment, executing shell commands, reading and writing files, and managing sessions — all without leaving your shell.
 
 <br>
 
 ## Features
 
-- **Blazing Fast Output**: Leveraging Groq's high-speed LPU infrastructure for instant token streaming.
-- **Agentic Tool Calling**: The AI natively integrates with your file system. It can seamlessly list directories, read/write files, and execute scripts to answer complex questions.
-- **Isolated Sessions**: Conversation context is strictly bound to the specific terminal window or tab you are using.
-- **Command Recording**: Automatically pipe the `stdout` and `stderr` of any terminal command directly into the AI's context window.
-- **Frictionless Prompting**: No more quoting your terminal inputs. Ask questions in plain English directly from your shell prompt.
+- **Blazing Fast Streaming** — Groq's LPU infrastructure delivers near-instant token streaming.
+- **Agentic Tool Calling** — The AI can list directories, read/write files, and run shell commands to solve tasks autonomously.
+- **Rich Markdown Rendering** — Toggle to non-streaming mode for fully styled Markdown output with tables, code blocks, headings, lists, and more.
+- **Isolated Sessions** — Conversation history is strictly bound to your terminal window/tab via process isolation.
+- **Command Recording** — Pipe `stdout`/`stderr` of any shell command directly into the AI's context window.
+- **Auto-Commit** — Analyzes your `git diff` and writes a conventional commit message for you.
+- **Session Housekeeping** — Automatically cleans up orphaned session files from dead terminal processes.
 
 <br>
 
@@ -46,16 +55,15 @@ The **AI CLI Assistant** integrates state-of-the-art LLMs directly into your ter
 
 ### Pre-built Binaries
 
-The easiest way to install is to download a pre-compiled binary directly from the [**Releases**](https://github.com/nandan-19/ai-cli/releases/latest) page.
+Download the latest pre-compiled binary from the [**Releases**](https://github.com/nandan-19/ai-cli/releases/latest) page.
 
-| Platform | Download |
+| Platform | Binary |
 |---|---|
 | **Linux** (x86-64) | `ai` |
 | **Windows** (x86-64) | `ai.exe` |
 
-**Linux:**
+**Linux / macOS:**
 ```bash
-# Download the latest release
 curl -Lo ai https://github.com/nandan-19/ai-cli/releases/latest/download/ai
 chmod +x ai
 sudo mv ai /usr/local/bin/ai
@@ -63,125 +71,166 @@ sudo mv ai /usr/local/bin/ai
 
 **Windows (PowerShell):**
 ```powershell
-# Download the latest release
 Invoke-WebRequest -Uri "https://github.com/nandan-19/ai-cli/releases/latest/download/ai.exe" -OutFile "ai.exe"
 New-Item -ItemType Directory -Force -Path "C:\tools"
 Move-Item -Path ".\ai.exe" -Destination "C:\tools\ai.exe" -Force
-# Add to PATH permanently for the current user
 [Environment]::SetEnvironmentVariable('Path', $env:Path + ';C:\tools', 'User')
 ```
 
 <br>
 
-### Prerequisites
-
-Ensure you have [Rust & Cargo](https://rustup.rs/) installed on your machine.
-
 ### Build from Source
 
-**1. Clone the repository**
+**Prerequisites:** [Rust & Cargo](https://rustup.rs/)
+
 ```bash
 git clone https://github.com/nandan-19/ai-cli.git
-cd ai_cli
-```
-
-**2. Compile the binary**
-```bash
+cd ai-cli
 cargo build --release
 ```
 
-**3. Move to your PATH**
+**Install the binary:**
 
-Depending on your operating system, move the resulting executable to a directory available in your system's `PATH`.
-
-**Windows (PowerShell):**
-```powershell
-New-Item -ItemType Directory -Force -Path "C:\tools"
-Copy-Item -Path ".\target\release\ai.exe" -Destination "C:\tools\ai.exe" -Force
-$env:Path += ";C:\tools"
-```
-
-**macOS / Linux:**
-
-Move the executable to `/usr/local/bin` (requires root privileges):
 ```bash
+# Linux / macOS
 sudo cp target/release/ai /usr/local/bin/ai
-```
 
-*Alternatively, for a local user installation without `sudo`, you can move it to `~/.local/bin` and ensure that directory is added to your `PATH` in your `~/.bashrc` or `~/.zshrc`:*
-```bash
-mkdir -p ~/.local/bin
-cp target/release/ai ~/.local/bin/ai
-export PATH="$HOME/.local/bin:$PATH"
+# Linux / macOS (no sudo)
+mkdir -p ~/.local/bin && cp target/release/ai ~/.local/bin/ai
+
+# Windows (PowerShell)
+Copy-Item .\target\release\ai.exe C:\tools\ai.exe -Force
 ```
 
 <br>
 
 ## Configuration
 
-Before making your first query, you must authenticate the CLI using your Groq API key.
+Before your first query, set your Groq API key:
 
-**1. Set the API Key**
 ```bash
 ai set-key YOUR_GROQ_API_KEY
 ```
 
-**2. Configure the Model (Optional)**
-You can use any model supported by Groq. The CLI uses an optimized model by default, but you are free to configure it to your preference:
+Optionally configure your preferred model:
+
 ```bash
-ai set-model YOUR_PREFERRED_MODEL_ID
+ai set-model openai/gpt-oss-20b
 ```
-*(e.g.,`openai/gpt-oss-20b`, `llama-3.3-70b-versatile`) 
+
+> Get a free API key at [console.groq.com](https://console.groq.com). Recommended models: `openai/gpt-oss-20b`, `llama-3.3-70b-versatile`, `gemma2-9b-it`.
+
+Config is stored at `~/.terminal_ai.json`.
 
 <br>
 
-## Usage
-
-Interact with the assistant naturally. Quotation marks are completely optional.
+## Command Reference
 
 ### 1. Direct Queries
-Ask questions or request code generation.
+
+Ask anything — no quotes required:
+
+```bash
+ai how do I reverse a string in Rust?
+ai explain the difference between TCP and UDP
+ai write a Python script to rename all JPGs in a folder
+```
+
+---
+
+### 2. Follow-up with Context (`-p` / `--prev`)
+
+Pass the current session's conversation history back to the AI for contextual follow-ups:
+
 ```bash
 ai how do I parse JSON in Rust?
+ai -p now make it handle errors with anyhow
+ai -p add unit tests for that
 ```
 
-### 2. Follow-up & Context (`-p` / `--prev`)
-Pass your terminal's most recent conversation history back to the AI for highly contextual follow-ups.
+The `-p` flag works with any command — it always includes your previous exchange as context.
+
+---
+
+### 3. Command Recording (`rec`)
+
+Run any terminal command and capture its output (stdout + stderr) into the AI's context. The AI can then explain errors, suggest fixes, or continue from the output.
+
 ```bash
-ai -p can you rewrite that using serde?
+ai rec cargo build --release
+ai -p why did it fail?
+
+ai rec npm test
+ai -p which test is slowest?
+
+ai rec python script.py --verbose
 ```
 
-### 3. Native Command Recording (`rec`)
-Use the `rec` subcommand to run any arbitrary terminal script. The AI will quietly execute it and cache the exit status, output, and errors directly into your session history.
+> Commands run in your current shell. Output is stored in session history automatically.
+
+---
+
+### 4. Auto Commit (`commit`)
+
+Analyzes your `git diff` and generates a conventional commit message, then commits automatically:
 
 ```bash
-ai rec npm run dev
+ai commit
 ```
-If the command crashes, simply ask the AI to debug it:
+
+- If changes are staged (`git add`), they are committed as-is.
+- If nothing is staged, unstaged changes are committed using `git commit -a`.
+- The AI reads the diff and writes a concise, descriptive commit message.
+
+---
+
+### 5. Streaming / Markdown Mode (`stream-toggle`)
+
+Toggle between two output modes:
+
 ```bash
-ai -p why did the build fail?
+ai stream-toggle
 ```
 
-### 4. Session Management
+| Mode | Behaviour | Header |
+|---|---|---|
+| **Streaming** (default) | Tokens print live as they arrive | `[model-name]` |
+| **Markdown** | Waits for full response, renders styled output | `[model-name] · markdown` |
 
-The AI isolates history per parent process. If you close your terminal, the session ends.
+Run `ai stream-toggle` again to switch back.
+
+---
+
+### 6. Session Management
+
+Sessions are isolated per terminal window. History is cleaned up automatically when terminals close.
 
 | Command | Description |
 |---|---|
-| `ai history` | Print the current terminal window's conversation history |
-| `ai clear` | Wipe the context for the current terminal window |
-| `ai clean-all` | Run a system-wide sweep to delete all orphaned background session files |
+| `ai history` | Print the full conversation history for this terminal window |
+| `ai clear` | Wipe the conversation history for this terminal window |
+| `ai clean-all` | Delete all orphaned session files from closed terminals |
+
+---
+
+### 7. Configuration Commands
+
+| Command | Description |
+|---|---|
+| `ai set-key YOUR_API_KEY` | Save your Groq API key |
+| `ai set-model MODEL_ID` | Set the model used for all queries |
+
 
 <br>
 
 ## Security
 
-Granting an AI access to execute terminal commands requires strict security boundaries.
+Granting an AI access to your terminal requires clear security boundaries:
 
-* **Read Operations** (like listing directories or reading file contents) are executed automatically if the AI requests them.
-* **Destructive Operations** (like writing/overwriting files or executing shell commands) will immediately halt the agent and prompt you with a `[Y/n]` verification before proceeding. 
+- **Read operations** (list directories, read files) execute automatically.
+- **Destructive operations** (write/overwrite files, run shell commands) pause and prompt `[Y/n]` before proceeding.
 
-You remain in complete control of your host machine at all times.
+You remain in complete control of your machine at all times.
 
 <div align="center">
   <br>

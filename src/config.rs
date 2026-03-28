@@ -6,6 +6,8 @@ use std::path::PathBuf;
 pub struct Config {
     pub api_key: Option<String>,
     pub model: String,
+    #[serde(default = "default_streaming")]
+    pub streaming: bool,
 }
 
 impl Default for Config {
@@ -13,8 +15,13 @@ impl Default for Config {
         Self {
             api_key: None,
             model: "openai/gpt-oss-20b".to_string(),
+            streaming: true,
         }
     }
+}
+
+fn default_streaming() -> bool {
+    true
 }
 
 pub fn config_path() -> PathBuf {
