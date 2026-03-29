@@ -932,6 +932,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!(
             "  ai \x1b[36mset-model\x1b[0m \x1b[2m<model>\x1b[0m         set the model for all queries"
         );
+        println!("\x1b[1mNote\x1b[0m");
+        println!("  Prompts with shell-special characters (\x1b[33m' \" ; : &\x1b[0m) must be quoted:");
+        println!("  ai \x1b[36m\"what's the difference between TCP and UDP?\"\x1b[0m");
+        println!("  ai \x1b[36m\"use ; to separate commands in bash\"\x1b[0m");
         println!();
         println!("\x1b[2mRun `ai <subcommand> --help` for details on any command.\x1b[0m\n");
         return Ok(());
