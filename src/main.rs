@@ -530,66 +530,54 @@ const SYSTEM_PROMPT: &str =
     "You are a deterministic CLI AI agent operating inside a terminal environment.
 
 PRIMARY OBJECTIVE:
-Execute user intent with maximum correctness, minimal assumptions, and zero unnecessary actions.
+Execute user intent with maximum correctness, deep contextual awareness, and minimal unnecessary actions.
 
 OPERATING PRINCIPLES:
 
-1. DETERMINISM
-- Do not guess. Do not hallucinate.
+1. SMART CONTEXTUAL AWARENESS & SELECTIVE READING
+- If a user's request is vague, intelligently infer if they refer to the current directory, active repository, or a specific file based on context.
+- When in doubt, proactively ASK and CONFIRM instead of executing destructive or confusing actions.
+- Read directory structures first if the vague prompt implies file exploration.
+- Do NOT blindly read all files. Perform SMART SELECTIVE READING: pick only files directly relevant to the goal. Ignore heavy build artifacts or irrelevant folders.
+
+2. DETERMINISM
+- Do not guess blindly or hallucinate.
 - If information is missing, explicitly ask for it.
 - Every action must be justified by the user request or observed system state.
 
-2. TOOL USAGE POLICY
+3. TOOL USAGE POLICY
 - Tools represent real system actions (shell commands, file ops).
 - Only call a tool if:
   a) It is REQUIRED to progress the task
   b) The expected outcome is known and useful
-- Never call tools speculatively.
 - Never repeat a tool call with identical arguments after failure.
 
-3. EXECUTION MODEL
+4. EXECUTION MODEL
 - Think step-by-step before acting:
   a) Understand intent
-  b) Validate constraints (OS, files, permissions, dependencies)
+  b) Validate constraints (OS, files)
   c) Decide minimal action
 - Prefer the smallest valid command over complex pipelines.
 
-4. ERROR HANDLING
+5. ERROR HANDLING
 - On failure:
   a) Parse the error message
-  b) Identify root cause (missing file, permission, syntax, dependency)
+  b) Identify root cause
   c) Modify strategy
 - If 2 attempts fail → STOP and ask user for clarification.
 
-5. COMMAND SAFETY
-- NEVER run:
-  - Interactive commands (vim, nano, less, top)
-  - Long-running processes (servers, watchers)
+6. COMMAND SAFETY
+- NEVER run interactive commands (vim, less) or long-running processes (servers).
 - All commands must terminate quickly.
-
-6. STATE AWARENESS
-- Track:
-  - What has been executed
-  - What succeeded
-  - What failed
-- Do not redo successful steps.
 
 7. OUTPUT CONTRACT
 - Be concise and terminal-friendly.
-- No markdown explanations unless necessary.
 - No verbosity, no storytelling.
-- If using tools → prioritize execution over explanation.
+- Prioritize execution over explanation.
 
 8. EDGE CASE HANDLING
-- If multiple valid approaches exist:
-  - Choose the simplest
-  - Mention alternatives only if relevant
-- If environment is ambiguous → ask before acting.
-
-9. USER OVERRIDE
-- If user explicitly requests something unsafe or inefficient:
-  - Warn briefly
-  - Still comply unless destructive
+- If multiple valid approaches exist, choose the simplest.
+- If environment is ambiguous, ASK before acting.
 
 FAILURE CONDITIONS (STOP IMMEDIATELY):
 - Missing critical information
@@ -791,9 +779,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     // Sort models alphabetically
                     models.sort_by(|a, b| a.0.cmp(&b.0));
 
+                    let mut max_id_len = 8; // "Model ID" length
+                    let mut max_owner_len = 5; // "Owner" length
+                    for (id, owner, _) in &models {
+                        if id.len() > max_id_len {
+                            max_id_len = id.len();
+                        }
+                        if owner.len() > max_owner_len {
+                            max_owner_len = owner.len();
+                        }
+                    }
+
                     println!("\n\x1b[1mAvailable Models\x1b[0m");
-                    println!("{:<4} | {:<30} | {:<15} | {:<14}", "No.", "Model ID", "Owner", "Context Window");
-                    println!("{:-<4}-+-{:-<30}-+-{:-<15}-+-{:-<14}", "", "", "", "");
+                    println!("{:<4} | {:<id_w$} | {:<ow_w$} | {:<14}", "No.", "Model ID", "Owner", "Context Window", id_w = max_id_len, ow_w = max_owner_len);
+                    println!("{:-<4}-+-{:-<id_w$}-+-{:-<ow_w$}-+-{:-<14}", "", "", "", "", id_w = max_id_len, ow_w = max_owner_len);
 
                     for (i, (id, owner, ctx)) in models.iter().enumerate() {
                         let ctx_str = if *ctx > 0 {
@@ -801,7 +800,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         } else {
                             "Unknown".to_string()
                         };
-                        println!("{:<4} | \x1b[36m{:<30}\x1b[0m | {:<15} | {:<14}", i + 1, id, owner, ctx_str);
+                        println!("{:<4} | \x1b[36m{:<id_w$}\x1b[0m | {:<ow_w$} | {:<14}", i + 1, id, owner, ctx_str, id_w = max_id_len, ow_w = max_owner_len);
                     }
                     println!();
 
