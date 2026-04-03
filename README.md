@@ -3,7 +3,7 @@
 # AI CLI Assistant
 
 [![Rust](https://img.shields.io/badge/rust-1.80%2B-blue.svg?style=flat-square)](https://www.rust-lang.org)
-[![Version](https://img.shields.io/badge/version-0.1.2-orange.svg?style=flat-square)](https://github.com/nandan-19/ai-cli/releases)
+[![Version](https://img.shields.io/badge/version-0.1.4-orange.svg?style=flat-square)](https://github.com/nandan-19/ai-cli/releases)
 [![Groq](https://img.shields.io/badge/Powered%20by-Groq-f55a3c.svg?style=flat-square)](https://groq.com)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
@@ -48,6 +48,7 @@ The **AI CLI Assistant** integrates state-of-the-art LLMs directly into your ter
 - **Command Recording** — Pipe `stdout`/`stderr` of any shell command directly into the AI's context window.
 - **Auto-Commit** — Analyzes your `git diff` and writes a conventional commit message for you.
 - **Session Housekeeping** — Automatically cleans up orphaned session files from dead terminal processes.
+- **Smart Error Handling** — Provides actionable guidance (e.g., auto-suggests context clear or model switch) when token/rate limits are reached.
 
 <br>
 
@@ -112,9 +113,10 @@ Before your first query, set your Groq API key:
 ai set-key YOUR_GROQ_API_KEY
 ```
 
-Optionally configure your preferred model:
+Optionally configure your preferred model, or run `ai set-model` without arguments to select from an interactive, dynamically fetched list of available Groq models:
 
 ```bash
+ai set-model
 ai set-model openai/gpt-oss-20b
 ```
 
@@ -218,7 +220,7 @@ Sessions are isolated per terminal window. History is cleaned up automatically w
 | Command | Description |
 |---|---|
 | `ai set-key YOUR_API_KEY` | Save your Groq API key |
-| `ai set-model MODEL_ID` | Set the model used for all queries |
+| `ai set-model [MODEL_ID]` | Set a specific model, or run without arguments for an interactive selection menu |
 
 
 <br>

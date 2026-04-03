@@ -10,8 +10,8 @@ Ask questions in plain English — no quotes needed:\n\
   ai how do I reverse a string in Rust?\n\
   ai explain the OSI model\n\
 \n\
-Use -p / --prev to include your last conversation as context:\n\
-  ai -p rewrite that using anyhow\n\
+Every query automatically includes the current session history as context.\n\
+Use `ai clear` to start a fresh conversation.\n\
 \n\
 Use subcommands for sessions, config, recording, commits, and output modes.\n\
 Run `ai <subcommand> --help` for details on any command.",
@@ -22,14 +22,6 @@ pub struct Cli {
     /// The question or instruction to send to the AI (no quotes needed)
     #[arg(num_args = 0..)]
     pub prompt: Vec<String>,
-
-    /// Include the current session's conversation history as context
-    #[arg(
-        short = 'p',
-        long = "prev",
-        help = "Include session history as context for follow-up questions"
-    )]
-    pub prev_context: bool,
 
     #[command(subcommand)]
     pub command: Option<Commands>,
@@ -57,15 +49,18 @@ Example:\n\
         long_about = "Set the Groq model used for all queries. The model ID is saved to\n\
 ~/.terminal_ai.json and persists across sessions.\n\
 \n\
+If run without arguments, presents an interactive list to choose from.\n\
+\n\
 Recommended models:\n\
   openai/gpt-oss-20b        (fast, balanced)\n\
   llama-3.3-70b-versatile   (high quality)\n\
   gemma2-9b-it              (lightweight)\n\
 \n\
-Example:\n\
-  ai set-model openai/gpt-oss-20b"
+Examples:\n\
+  ai set-model                      (interactive list)\n\
+  ai set-model openai/gpt-oss-20b   (direct set)"
     )]
-    SetModel { model: String },
+    SetModel { model: Option<String> },
 
     /// Print the conversation history for this terminal window
     #[command(
@@ -85,7 +80,9 @@ Use `ai clear` to wipe history without closing the terminal."
         long_about = "Delete all messages in the conversation history for this terminal window.\n\
 \n\
 This does not affect other terminal windows. To remove orphaned session\n\
-files from closed terminals, use `ai clean-all`."
+files from closed terminals, use `ai clean-all`.\n\
+\n\
+Run this if you hit a context/token limit error."
     )]
     Clear,
 
@@ -125,14 +122,14 @@ you can trigger it manually if needed."
         about = "Record a command's output into session history",
         long_about = "Run any shell command and capture its stdout and stderr directly into\n\
 the current session's conversation history. The AI can then analyze\n\
-the output on a follow-up query.\n\
+the output on the next query.\n\
 \n\
 Examples:\n\
   ai rec cargo build --release\n\
-  ai -p why did the build fail?\n\
+  ai why did the build fail?\n\
 \n\
   ai rec npm test\n\
-  ai -p which test took the longest?\n\
+  ai which test took the longest?\n\
 \n\
   ai rec python script.py --verbose"
     )]
