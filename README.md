@@ -3,7 +3,7 @@
 # AI CLI Assistant
 
 [![Rust](https://img.shields.io/badge/rust-1.80%2B-blue.svg?style=flat-square)](https://www.rust-lang.org)
-[![Version](https://img.shields.io/badge/version-0.1.5-orange.svg?style=flat-square)](https://github.com/nandan-19/ai-cli/releases)
+[![Version](https://img.shields.io/badge/version-0.1.6-orange.svg?style=flat-square)](https://github.com/nandan-19/ai-cli/releases)
 [![Groq](https://img.shields.io/badge/Powered%20by-Groq-f55a3c.svg?style=flat-square)](https://groq.com)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
@@ -11,6 +11,7 @@
 Ask questions, run commands, generate commits, and render rich Markdown — all from your shell.
 
 </div>
+
 
 ---
 
