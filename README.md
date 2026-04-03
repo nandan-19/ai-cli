@@ -23,7 +23,7 @@ Ask questions, run commands, generate commits, and render rich Markdown — all 
 - [Configuration](#configuration)
 - [Command Reference](#command-reference)
   - [Direct Queries](#1-direct-queries)
-  - [Follow-up with Context](#2-follow-up-with-context--p----prev)
+  - [Follow-up with Context](#2-follow-up-with-context)
   - [Command Recording](#3-command-recording-rec)
   - [Auto Commit](#4-auto-commit-commit)
   - [Streaming Toggle](#5-streaming--markdown-mode-stream-toggle)
@@ -140,17 +140,15 @@ ai write a Python script to rename all JPGs in a folder
 
 ---
 
-### 2. Follow-up with Context (`-p` / `--prev`)
+### 2. Follow-up with Context
 
-Pass the current session's conversation history back to the AI for contextual follow-ups:
+Conversations in your terminal are automatically saved to your session history. You don't need any special flags to ask follow-up questions:
 
 ```bash
 ai how do I parse JSON in Rust?
-ai -p now make it handle errors with anyhow
-ai -p add unit tests for that
+ai now make it handle errors with anyhow
+ai add unit tests for that
 ```
-
-The `-p` flag works with any command — it always includes your previous exchange as context.
 
 ---
 
@@ -160,10 +158,10 @@ Run any terminal command and capture its output (stdout + stderr) into the AI's 
 
 ```bash
 ai rec cargo build --release
-ai -p why did it fail?
+ai why did it fail?
 
 ai rec npm test
-ai -p which test is slowest?
+ai which test is slowest?
 
 ai rec python script.py --verbose
 ```
