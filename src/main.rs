@@ -747,7 +747,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         Ok(r) => r,
                         Err(e) => {
                             eprintln!("\x1b[31mFailed to fetch models:\x1b[0m {}", e);
-                            println!("Fallback: continuing with default model ({}).", config.model);
+                            println!(
+                                "Fallback: continuing with default model ({}).",
+                                config.model
+                            );
                             return Ok(());
                         }
                     };
@@ -755,7 +758,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if !res.status().is_success() {
                         let err_text = res.text().await.unwrap_or_default();
                         eprintln!("\x1b[31mAPI Error:\x1b[0m {}", err_text);
-                        println!("Fallback: continuing with default model ({}).", config.model);
+                        println!(
+                            "Fallback: continuing with default model ({}).",
+                            config.model
+                        );
                         return Ok(());
                     }
 
@@ -763,7 +769,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         Ok(d) => d,
                         Err(e) => {
                             eprintln!("\x1b[31mFailed to parse response:\x1b[0m {}", e);
-                            println!("Fallback: continuing with default model ({}).", config.model);
+                            println!(
+                                "Fallback: continuing with default model ({}).",
+                                config.model
+                            );
                             return Ok(());
                         }
                     };
@@ -803,8 +812,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
 
                     println!("\n\x1b[1mAvailable Models\x1b[0m");
-                    println!("{:<4} | {:<id_w$} | {:<ow_w$} | {:<14}", "No.", "Model ID", "Owner", "Context Window", id_w = max_id_len, ow_w = max_owner_len);
-                    println!("{:-<4}-+-{:-<id_w$}-+-{:-<ow_w$}-+-{:-<14}", "", "", "", "", id_w = max_id_len, ow_w = max_owner_len);
+                    println!(
+                        "{:<4} | {:<id_w$} | {:<ow_w$} | {:<14}",
+                        "No.",
+                        "Model ID",
+                        "Owner",
+                        "Context Window",
+                        id_w = max_id_len,
+                        ow_w = max_owner_len
+                    );
+                    println!(
+                        "{:-<4}-+-{:-<id_w$}-+-{:-<ow_w$}-+-{:-<14}",
+                        "",
+                        "",
+                        "",
+                        "",
+                        id_w = max_id_len,
+                        ow_w = max_owner_len
+                    );
 
                     for (i, (id, owner, ctx)) in models.iter().enumerate() {
                         let ctx_str = if *ctx > 0 {
@@ -812,7 +837,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         } else {
                             "Unknown".to_string()
                         };
-                        println!("{:<4} | \x1b[36m{:<id_w$}\x1b[0m | {:<ow_w$} | {:<14}", i + 1, id, owner, ctx_str, id_w = max_id_len, ow_w = max_owner_len);
+                        println!(
+                            "{:<4} | \x1b[36m{:<id_w$}\x1b[0m | {:<ow_w$} | {:<14}",
+                            i + 1,
+                            id,
+                            owner,
+                            ctx_str,
+                            id_w = max_id_len,
+                            ow_w = max_owner_len
+                        );
                     }
                     println!();
 
@@ -832,10 +865,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 save_config(&config);
                                 println!("✓ Model switched to {}.\n", selected);
                             } else {
-                                println!("\x1b[31mInvalid selection.\x1b[0m Keeping model: {}\n", config.model);
+                                println!(
+                                    "\x1b[31mInvalid selection.\x1b[0m Keeping model: {}\n",
+                                    config.model
+                                );
                             }
                         } else {
-                            println!("\x1b[31mInvalid input.\x1b[0m Keeping model: {}\n", config.model);
+                            println!(
+                                "\x1b[31mInvalid input.\x1b[0m Keeping model: {}\n",
+                                config.model
+                            );
                         }
                     } else {
                         println!("Cancelled. Keeping model: {}\n", config.model);
@@ -1018,7 +1057,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             env!("CARGO_PKG_VERSION")
         );
         println!("\x1b[1mUsage\x1b[0m");
-        println!("  ai \x1b[36m<question>\x1b[0m              ask anything — session history is always included");
+        println!(
+            "  ai \x1b[36m<question>\x1b[0m              ask anything — session history is always included"
+        );
         println!();
         println!("\x1b[1mSubcommands\x1b[0m");
         println!(
@@ -1046,7 +1087,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             "  ai \x1b[36mset-model\x1b[0m \x1b[2m<model>\x1b[0m         set the model for all queries"
         );
         println!("\x1b[1mNote\x1b[0m");
-        println!("  Prompts with shell-special characters (\x1b[33m' \" ; : &\x1b[0m) must be quoted:");
+        println!(
+            "  Prompts with shell-special characters (\x1b[33m' \" ; : &\x1b[0m) must be quoted:"
+        );
         println!("  ai \x1b[36m\"what's the difference between TCP and UDP?\"\x1b[0m");
         println!("  ai \x1b[36m\"use ; to separate commands in bash\"\x1b[0m");
         println!();
@@ -1177,18 +1220,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         if let Some(json_start) = s.find('{') {
                             if let Ok(v) = serde_json::from_str::<Value>(&s[json_start..]) {
                                 let code = v["error"]["code"].as_str().unwrap_or("");
-                                let msg  = v["error"]["message"].as_str().unwrap_or(&s);
+                                let msg = v["error"]["message"].as_str().unwrap_or(&s);
                                 match code {
                                     "rate_limit_exceeded" => {
                                         eprintln!("\n\x1b[33m[Rate limit]\x1b[0m {}", msg);
-                                        if msg.contains("reduce your message size") || msg.to_lowercase().contains("too large") {
-                                            eprintln!("\x1b[2mTip: Your session history may be too large for this model's token limits.\x1b[0m");
-                                            eprintln!("\x1b[2mRun \x1b[0m\x1b[36mai clear\x1b[0m\x1b[2m to start a fresh session, or \x1b[0m\x1b[36mai set-model\x1b[0m\x1b[2m to switch to a model with higher limits.\x1b[0m");
+                                        if msg.contains("reduce your message size")
+                                            || msg.to_lowercase().contains("too large")
+                                        {
+                                            eprintln!(
+                                                "\x1b[2mTip: Your session history may be too large for this model's token limits.\x1b[0m"
+                                            );
+                                            eprintln!(
+                                                "\x1b[2mRun \x1b[0m\x1b[36mai clear\x1b[0m\x1b[2m to start a fresh session, or \x1b[0m\x1b[36mai set-model\x1b[0m\x1b[2m to switch to a model with higher limits.\x1b[0m"
+                                            );
                                         }
                                     }
                                     "context_length_exceeded" => {
-                                        eprintln!("\n\x1b[33m[Context limit reached]\x1b[0m The conversation history is too long for this model.");
-                                        eprintln!("\x1b[2mRun \x1b[0m\x1b[36mai clear\x1b[0m\x1b[2m to start a fresh session and try again.\x1b[0m");
+                                        eprintln!(
+                                            "\n\x1b[33m[Context limit reached]\x1b[0m The conversation history is too long for this model."
+                                        );
+                                        eprintln!(
+                                            "\x1b[2mRun \x1b[0m\x1b[36mai clear\x1b[0m\x1b[2m to start a fresh session and try again.\x1b[0m"
+                                        );
                                     }
                                     _ => eprintln!("\n\x1b[31m[Error: {}]\x1b[0m", msg),
                                 }
@@ -1279,18 +1332,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 // Parse Groq's structured error response
                 if let Ok(v) = serde_json::from_str::<Value>(&body) {
                     let code = v["error"]["code"].as_str().unwrap_or("");
-                    let msg  = v["error"]["message"].as_str().unwrap_or(&body);
+                    let msg = v["error"]["message"].as_str().unwrap_or(&body);
                     match code {
                         "rate_limit_exceeded" => {
                             eprintln!("\x1b[33m[Rate limit]\x1b[0m {}", msg);
-                            if msg.contains("reduce your message size") || msg.to_lowercase().contains("too large") {
-                                eprintln!("\x1b[2mTip: Your session history may be too large for this model's token limits.\x1b[0m");
-                                eprintln!("\x1b[2mRun \x1b[0m\x1b[36mai clear\x1b[0m\x1b[2m to start a fresh session, or \x1b[0m\x1b[36mai set-model\x1b[0m\x1b[2m to switch to a model with higher limits.\x1b[0m");
+                            if msg.contains("reduce your message size")
+                                || msg.to_lowercase().contains("too large")
+                            {
+                                eprintln!(
+                                    "\x1b[2mTip: Your session history may be too large for this model's token limits.\x1b[0m"
+                                );
+                                eprintln!(
+                                    "\x1b[2mRun \x1b[0m\x1b[36mai clear\x1b[0m\x1b[2m to start a fresh session, or \x1b[0m\x1b[36mai set-model\x1b[0m\x1b[2m to switch to a model with higher limits.\x1b[0m"
+                                );
                             }
                         }
                         "context_length_exceeded" => {
-                            eprintln!("\x1b[33m[Context limit reached]\x1b[0m The conversation history is too long for this model.");
-                            eprintln!("\x1b[2mRun \x1b[0m\x1b[36mai clear\x1b[0m\x1b[2m to start a fresh session and try again.\x1b[0m");
+                            eprintln!(
+                                "\x1b[33m[Context limit reached]\x1b[0m The conversation history is too long for this model."
+                            );
+                            eprintln!(
+                                "\x1b[2mRun \x1b[0m\x1b[36mai clear\x1b[0m\x1b[2m to start a fresh session and try again.\x1b[0m"
+                            );
                         }
                         _ => eprintln!("\x1b[31m[Error: {}]\x1b[0m", msg),
                     }
@@ -1320,6 +1383,132 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     tracker.id = tc["id"].as_str().unwrap_or("").to_string();
                     tracker.name = tc["function"]["name"].as_str().unwrap_or("").to_string();
                     tracker.arguments = tc["function"]["arguments"]
+                        .as_str()
+                        .unwrap_or("")
+                        .to_string();
+                    tool_calls.insert(idx, tracker);
+                }
+            }
+
+            // Build + persist assistant message
+            let mut assistant_msg = json!({ "role": "assistant" });
+            if !full_response.is_empty() {
+                assistant_msg["content"] = json!(full_response);
+            }
+            if !tool_calls.is_empty() {
+                let mut tc_arr = vec![];
+                let mut indices: Vec<&usize> = tool_calls.keys().collect();
+                indices.sort();
+                for &idx in &indices {
+                    let tc = &tool_calls[&idx];
+                    tc_arr.push(json!({
+                        "id": tc.id,
+                        "type": "function",
+                        "function": { "name": tc.name, "arguments": tc.arguments }
+                    }));
+                }
+                assistant_msg["tool_calls"] = json!(tc_arr);
+            }
+            messages.push(assistant_msg.clone());
+            session.messages.push(assistant_msg.clone());
+            save_session(&session);
+
+            if finish_reason != "tool_calls" || tool_calls.is_empty() {
+                break 'chat;
+            } else {
+                let mut indices: Vec<&usize> = tool_calls.keys().collect();
+                indices.sort();
+                let mut executed_results: HashMap<(&String, &String), String> = HashMap::new();
+                for &idx in indices {
+                    let tc = &tool_calls[&idx];
+                    let result =
+                        if let Some(cached) = executed_results.get(&(&tc.name, &tc.arguments)) {
+                            cached.clone()
+                        } else {
+                            let r = execute_tool(&tc.name, &tc.arguments).await;
+                            executed_results.insert((&tc.name, &tc.arguments), r.clone());
+                            r
+                        };
+                    let tool_msg = json!({
+                        "role": "tool",
+                        "tool_call_id": tc.id,
+                        "content": result
+                    });
+                    messages.push(tool_msg.clone());
+                    session.messages.push(tool_msg);
+                    save_session(&session);
+                }
+            }
+        }
+    } // end 'chat
+
+    println!("\n");
+
+    Ok(())
+}
+                        .as_str()
+                        .unwrap_or("")
+                        .to_string();
+                    tool_calls.insert(idx, tracker);
+                }
+            }
+
+            // Build + persist assistant message
+            let mut assistant_msg = json!({ "role": "assistant" });
+            if !full_response.is_empty() {
+                assistant_msg["content"] = json!(full_response);
+            }
+            if !tool_calls.is_empty() {
+                let mut tc_arr = vec![];
+                let mut indices: Vec<&usize> = tool_calls.keys().collect();
+                indices.sort();
+                for &idx in &indices {
+                    let tc = &tool_calls[&idx];
+                    tc_arr.push(json!({
+                        "id": tc.id,
+                        "type": "function",
+                        "function": { "name": tc.name, "arguments": tc.arguments }
+                    }));
+                }
+                assistant_msg["tool_calls"] = json!(tc_arr);
+            }
+            messages.push(assistant_msg.clone());
+            session.messages.push(assistant_msg.clone());
+            save_session(&session);
+
+            if finish_reason != "tool_calls" || tool_calls.is_empty() {
+                break 'chat;
+            } else {
+                let mut indices: Vec<&usize> = tool_calls.keys().collect();
+                indices.sort();
+                let mut executed_results: HashMap<(&String, &String), String> = HashMap::new();
+                for &idx in indices {
+                    let tc = &tool_calls[&idx];
+                    let result =
+                        if let Some(cached) = executed_results.get(&(&tc.name, &tc.arguments)) {
+                            cached.clone()
+                        } else {
+                            let r = execute_tool(&tc.name, &tc.arguments).await;
+                            executed_results.insert((&tc.name, &tc.arguments), r.clone());
+                            r
+                        };
+                    let tool_msg = json!({
+                        "role": "tool",
+                        "tool_call_id": tc.id,
+                        "content": result
+                    });
+                    messages.push(tool_msg.clone());
+                    session.messages.push(tool_msg);
+                    save_session(&session);
+                }
+            }
+        }
+    } // end 'chat
+
+    println!("\n");
+
+    Ok(())
+}
                         .as_str()
                         .unwrap_or("")
                         .to_string();
