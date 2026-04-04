@@ -3,7 +3,7 @@
 # AI CLI Assistant
 
 [![Rust](https://img.shields.io/badge/rust-1.80%2B-blue.svg?style=flat-square)](https://www.rust-lang.org)
-[![Version](https://img.shields.io/badge/version-0.1.7-orange.svg?style=flat-square)](https://github.com/nandan-19/ai-cli/releases)
+[![Version](https://img.shields.io/badge/version-0.1.8-orange.svg?style=flat-square)](https://github.com/nandan-19/ai-cli/releases)
 [![Groq](https://img.shields.io/badge/Powered%20by-Groq-f55a3c.svg?style=flat-square)](https://groq.com)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
