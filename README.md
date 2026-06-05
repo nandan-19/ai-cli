@@ -17,6 +17,7 @@ Ask questions, run commands, generate commits, and render rich Markdown — all 
 
 ## Table of Contents
 
+- [Architecture](#architecture)
 - [Features](#features)
 - [Installation](#installation)
   - [Pre-built Binaries](#pre-built-binaries)
@@ -37,6 +38,86 @@ Ask questions, run commands, generate commits, and render rich Markdown — all 
 <br>
 
 The **AI CLI Assistant** integrates state-of-the-art LLMs directly into your terminal workflow. It operates not just as a chatbot, but as an **autonomous agent** capable of inspecting your environment, executing shell commands, reading and writing files, and managing sessions — all without leaving your shell.
+
+<br>
+
+## Architecture
+
+### 1. Prompt Flow
+
+```mermaid
+flowchart TB
+  U[User types a prompt] --> P[CLI parser]
+  P --> R{Prompt or command?}
+
+  R -->|Prompt| Q[Build chat request]
+  R -->|Subcommand| C[Run command handler]
+
+  Q --> S[Load config and session]
+  S --> M[Send request to Groq]
+  M --> G[Get response]
+
+  G --> O[Show streaming or markdown output]
+  G --> T{Needs a tool?}
+
+  T -->|No| F[Return answer]
+  T -->|Yes| H[Go to tool flow]
+
+  classDef entry fill:#1f2937,stroke:#94a3b8,color:#ffffff,stroke-width:2px;
+  classDef core fill:#0f766e,stroke:#5eead4,color:#ffffff,stroke-width:2px;
+  classDef output fill:#b45309,stroke:#fdba74,color:#ffffff,stroke-width:2px;
+  classDef guard fill:#be123c,stroke:#fda4af,color:#ffffff,stroke-width:2px;
+
+  class U,P entry;
+  class R,Q,S,M,G core;
+  class O,F output;
+  class T,H guard;
+```
+
+### 2. Tool Flow
+
+```mermaid
+flowchart TB
+  H[Tool request] --> T{Which tool?}
+
+  T -->|Read| L[Read file]
+  T -->|List| K[List directory]
+  T -->|Write| W[Write file]
+  T -->|Execute| X[Execute command]
+
+  W --> A[Ask for approval]
+  X --> A
+  A --> R[Run the tool]
+  R --> B[Send result back to model]
+
+  classDef guard fill:#be123c,stroke:#fda4af,color:#ffffff,stroke-width:2px;
+  classDef core fill:#0f766e,stroke:#5eead4,color:#ffffff,stroke-width:2px;
+  classDef output fill:#b45309,stroke:#fdba74,color:#ffffff,stroke-width:2px;
+
+  class H,T guard;
+  class L,K,R,X core;
+  class A,B output;
+```
+
+### 3. State Storage
+
+```mermaid
+flowchart TB
+  S[Session data] --> F[(Temp session file)]
+  C[Config data] --> G[(Home config file)]
+
+  F --> H[Per-terminal history]
+  G --> I[API key, model, streaming mode]
+
+  classDef data fill:#7c3aed,stroke:#c4b5fd,color:#ffffff,stroke-width:2px;
+  classDef store fill:#b45309,stroke:#fdba74,color:#ffffff,stroke-width:2px;
+
+  class S,C data;
+  class F,G store;
+  class H,I store;
+```
+
+These diagrams break the app into three simple parts: how a prompt moves through the app, how tools are used, and where state is kept.
 
 <br>
 
