@@ -16,7 +16,7 @@ Use `ai clear` to start a fresh conversation.\n\
 Use subcommands for sessions, config, recording, commits, and output modes.\n\
 Run `ai <subcommand> --help` for details on any command.",
     version,
-    arg_required_else_help = false
+    arg_required_else_help = true
 )]
 pub struct Cli {
     /// The question or instruction to send to the AI (no quotes needed)
