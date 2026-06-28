@@ -1,25 +1,36 @@
 pub mod prompt;
 
 use crate::config::Config;
+use crate::markdown::render_markdown;
 use crate::session::{Session, save_session};
 use crate::tools::{ToolCallTracker, execute_tool, get_tools};
-use crate::markdown::render_markdown;
 use futures::stream::StreamExt;
 use reqwest::Client;
 use reqwest_eventsource::{Event, EventSource};
 use serde_json::{Value, json};
 use std::collections::HashMap;
+use std::env;
 use std::io::{self, Write};
-
 pub async fn run_chat_loop(
     prompt_text: &str,
     config: &Config,
     api_key: &str,
     session: &mut Session,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let os_info = env::consts::OS;
+    let arch_info = env::consts::ARCH;
+    let cwd = env::current_dir().unwrap_or_default().display().to_string();
+
+    let dynamic_system_prompt = format!(
+        "{}\n\nCURRENT ENVIRONMENT:\n- Operating System: {}\n- Architecture: {}\n- Current Working Directory: {}",
+        prompt::SYSTEM_PROMPT,
+        os_info,
+        arch_info,
+        cwd
+    );
     let mut messages: Vec<Value> = vec![json!({
         "role": "system",
-        "content": prompt::SYSTEM_PROMPT
+        "content":dynamic_system_prompt
     })];
 
     // Always include full session history as context
