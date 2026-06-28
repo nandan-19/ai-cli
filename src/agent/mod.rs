@@ -32,7 +32,6 @@ pub async fn run_chat_loop(
         shell,
         cwd
     );
-    println!("System Prompt: {} ", dynamic_system_prompt);
     let mut messages: Vec<Value> = vec![json!({
         "role": "system",
         "content":dynamic_system_prompt
