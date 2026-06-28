@@ -20,14 +20,19 @@ pub async fn run_chat_loop(
     let os_info = env::consts::OS;
     let arch_info = env::consts::ARCH;
     let cwd = env::current_dir().unwrap_or_default().display().to_string();
+    let shell = env::var("SHELL")
+        .or_else(|_| env::var("COMSPEC"))
+        .unwrap_or_else(|_| "Unknown".to_string());
 
     let dynamic_system_prompt = format!(
-        "{}\n\nCURRENT ENVIRONMENT:\n- Operating System: {}\n- Architecture: {}\n- Current Working Directory: {}",
+        "{}\n\n[ENVIRONMENT CONTEXT]\nOS: {}\nArchitecture: {}\nShell: {}\nCWD: {}",
         prompt::SYSTEM_PROMPT,
         os_info,
         arch_info,
+        shell,
         cwd
     );
+    println!("System Prompt: {} ", dynamic_system_prompt);
     let mut messages: Vec<Value> = vec![json!({
         "role": "system",
         "content":dynamic_system_prompt
