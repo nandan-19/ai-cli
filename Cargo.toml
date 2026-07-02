@@ -1,6 +1,6 @@
 [package]
 name = "ai"
-version = "0.1.11"
+version = "0.1.12"
 edition = "2024"
 
 [dependencies]
@@ -24,3 +24,5 @@ reqwest = { version = "0.12", default-features = false, features = [
    "charset",
 ] }
 sysinfo = "0.33"
+self-replace = "1.5.0"
+tempfile = "3.27.0"

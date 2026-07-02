@@ -158,4 +158,11 @@ Examples:\n\
 Run `ai stream-toggle` again to switch back."
     )]
     StreamToggle,
+    /// Update ai-cli to the latest version from GitHub releases
+    #[command(
+        name = "update",
+        about = "Update the CLI to the latest version",
+        long_about = "Checks the GitHub repository for the latest release and updates the executable in-place."
+    )]
+    Update,
 }
